@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>جعبه ابزار ۳ (کوکب تک)</title>
+    <style>
+        /* تنظیمات کلی و فونت */
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #50e3c2;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --header-height: 60px;
+            --nav-height: 70px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tahoma', 'Segoe UI', Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            padding-bottom: var(--nav-height);
+        }
+
+        /* هدر */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #357abd);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        /* صفحه بارگذاری و وضعیت سیستم */
+        #system-check {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* کانتینر اصلی */
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            display: none; /* در ابتدا مخفی است تا بارگذاری کامل شود */
+        }
+
+        /* کارت‌ها و دکمه‌ها */
+        .grid-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .menu-btn {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .menu-btn i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .menu-btn span {
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        /* صفحات داخلی */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-color);
+            margin-left: 10px;
+        }
+
+        .page-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        /* لیست‌ها و زیرمنوها */
+        .sub-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sub-btn {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: right;
+            border: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .sub-btn:hover {
+            background: #f9f9f9;
+        }
+
+        .sub-btn::after {
+            content: '🔗';
+            font-size: 1.2rem;
+        }
+
+        /* نوار پیمایش پایین */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #888;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* فرم جستجو */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .search-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* آی‌فریم برای اجرای محتوا */
+        .content-frame {
+            width: 100%;
+            height: 80vh;
+            border: none;
+            border-radius: 10px;
+            background: #fff;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* پیام‌های سیستم */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 3000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- صفحه بررسی سیستم -->
+    <div id="system-check">
+        <div class="loader"></div>
+        <h2>کوکب تک</h2>
+        <p class="status-text" id="status-msg">در حال بررسی محیط اجرا...</p>
+    </div>
+
+    <!-- هدر اصلی -->
+    <header>
+        <h1>جعبه ابزار ۳ (کوکب تک)</h1>
+    </header>
+
+    <!-- محتوای اصلی -->
+    <main id="main-content">
+        
+        <!-- صفحه اصلی -->
+        <div id="home-page" class="page active">
+            <div class="grid-menu">
+                <button class="menu-btn" onclick="navigateTo('tests-page')">
+                    <i>📝</i>
+                    <span>آزمون‌ها</span>
+                </button>
+                <button class="menu-btn" onclick="navigateTo('games-page')">
+                    <i>🎮</i>
+                    <span>بازی‌ها</span>
+                </button>
+                <button class="menu-btn" onclick="navigateTo('ai-page')">
+                    <i>🤖</i>
+                    <span>هوش مصنوعی</span>
+                </button>
+                <button class="menu-btn" onclick="navigateTo('search-page')">
+                    <i>🌐</i>
+                    <span>جستجوی وب</span>
+                </button>
+                <button class="menu-btn" onclick="navigateTo('fal-page')">
+                    <i>🔮</i>
+                    <span>فال حافظ</span>
+                </button>
+                <button class="menu-btn" onclick="showToast('قابلیت‌های بیشتر در حال توسعه هستند')">
+                    <i>⚙️</i>
+                    <span>تنظیمات</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- صفحه آزمون‌ها -->
+        <div id="tests-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="navigateTo('home-page')">➜</button>
+                <span class="page-title">آزمون‌های نهم</span>
+            </div>
+            <div class="sub-menu">
+                <div class="sub-btn" onclick="openExternal('https://paadars.com/class9/math_1/samples/finalone/')">
+                    PDF های آزمون
+                </div>
+                <div class="sub-btn" onclick="openExternal('https://www.kanoon.ir/Public/ExamQuestions?group=27&lesson=7')">
+                    بانک سوالات کنکور
+                </div>
+                <div class="sub-btn" onclick="openExternal('https://ino.school/app/learning/امتحانات-پایه-نهم/ریاضی-نهم/امتحان')">
+                    آرشیو امتحانات
+                </div>
+                <div class="sub-btn" onclick="openExternal('https://gama.ir/azmoon/50488/آزمون-نوبت-اول-ریاضی-پایه-نهم-فصل-۱-تا-۴')">
+                    آزمون آنلاین با نمره دهی
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحه بازی‌ها -->
+        <div id="games-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="navigateTo('home-page')">➜</button>
+                <span class="page-title">بازی‌ها</span>
+            </div>
+            <div class="sub-menu">
+                <div class="sub-btn" onclick="openGame('https://funnigames.ir/bale/play/survivor')">آخرین مبارز</div>
+                <div class="sub-btn" onclick="openGame('https://funnigames.ir/bale/play/shifty-pet')">گربه لغزان</div>
+                <div class="sub-btn" onclick="openGame('https://funnigames.ir/bale/play/jump-up-3d-training')">بسکتبال</div>
+                <div class="sub-btn" onclick="openGame('https://games.codica.game/files/chapter_1_1/ver2.2.4_release/index.html?u=ef48f116-dc11-4285-8b77-b7cecf9fe190&s=29')">کدی (برنامه‌نویسی)</div>
+                <div class="sub-btn" onclick="openGame('http://hamrahgameland.ir/Games/KamionRang')">کامیون و رنگ</div>
+            </div>
+            <!-- فریم اجرای بازی -->
+            <iframe id="game-frame" class="content-frame" src=""></iframe>
+        </div>
+
+        <!-- صفحه هوش مصنوعی -->
+        <div id="ai-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="navigateTo('home-page')">➜</button>
+                <span class="page-title">هوش مصنوعی</span>
+            </div>
+            <div class="sub-menu">
+                <div class="sub-btn" onclick="openExternal('https://tools-gallery.boofai.com')">ابزار هوش مصنوعی</div>
+                <div class="sub-btn" onclick="navigateTo('ai-chat-subpage')">هوش مصنوعی چت</div>
+            </div>
+        </div>
+
+        <!-- زیرصفحه چت هوش مصنوعی -->
+        <div id="ai-chat-subpage" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="navigateTo('ai-page')">➜</button>
+                <span class="page-title">انتخاب مدل هوش مصنوعی</span>
+            </div>
+            <div class="sub-menu">
+                <div class="sub-btn" onclick="openExternal('https://chat.hooshzy.ir')">هوش مصنوعی زی</div>
+                <div class="sub-btn" onclick="openExternal('https://chat.boofai.com')">هوش مصنوعی بوف</div>
+            </div>
+        </div>
+
+        <!-- صفحه جستجوی وب -->
+        <div id="search-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="navigateTo('home-page')">➜</button>
+                <span class="page-title">جستجوی وب</span>
+            </div>
+            <div class="sub-menu">
+                <div class="sub-btn" onclick="openExternal('https://zarebin.ir')">موتور جستجوی زربین</div>
+                <div class="sub-btn" onclick="openExternal('https://google.com')">گوگل</div>
+            </div>
+            <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 10px;">
+                <h3>جستجوی شادبین</h3>
+                <div class="search-box">
+                    <input type="text" id="shaadbin-input" class="search-input" placeholder="متن خود را بنویسید...">
+                    <button class="search-btn" onclick="searchShaadbin()">جستجو</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحه فال حافظ -->
+        <div id="fal-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="navigateTo('home-page')">➜</button>
+                <span class="page-title">فال حافظ</span>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <p>برای دریافت فال کلیک کنید:</p>
+                <button class="menu-btn" style="width: 200px; height: 200px; border-radius: 50%; margin: 20px auto; background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);" onclick="openExternal('https://hafez.eitaa.com')">
+                    <i style="font-size: 4rem;">📜</i>
+                    <span style="font-size: 1.2rem; margin-top: 10px;">دریافت فال</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- نوار پیمایش پایین -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="navigateTo('home-page')">
+            <span class="nav-icon">🏠</span>
+            خانه
+        </div>
+        <div class="nav-item" onclick="navigateTo('tests-page')">
+            <span class="nav-icon">📝</span>
+            آزمون
+        </div>
+        <div class="nav-item" onclick="navigateTo('games-page')">
+            <span class="nav-icon">🎮</span>
+            بازی
+        </div>
+        <div class="nav-item" onclick="navigateTo('ai-page')">
+            <span class="nav-icon">🤖</span>
+            هوش
+        </div>
+    </nav>
+
+    <!-- پیام توست -->
+    <div id="toast" class="toast">پیام سیستم</div>
+
+    <script>
+        // متغیرهای سراسری
+        const statusMsg = document.getElementById('status-msg');
+        const systemCheck = document.getElementById('system-check');
+        const mainContent = document.getElementById('main-content');
+        const gameFrame = document.getElementById('game-frame');
+
+        // ۱. بررسی سیستم و شروع
+        window.addEventListener('load', async () => {
+            await checkSystem();
+        });
+
+        async function checkSystem() {
+            updateStatus('شناسایی محیط سخت‌افزاری...');
+            await delay(800);
+            
+            updateStatus('بررسی اتصال اینترنت...');
+            const isOnline = navigator.onLine;
+            if (!isOnline) {
+                showToast('هشدار: اتصال اینترنت برقرار نیست');
+            }
+            await delay(800);
+
+            updateStatus('بارگذاری کتابخانه‌های گرافیکی...');
+            // شبیه‌سازی لود کتابخانه‌ها
+            await delay(1000);
+
+            updateStatus('بهینه‌سازی رابط کاربری...');
+            await delay(500);
+
+            updateStatus('آماده‌سازی محیط اجرا...');
+            await delay(500);
+
+            // پایان بارگذاری
+            systemCheck.style.opacity = '0';
+            setTimeout(() => {
+                systemCheck.style.display = 'none';
+                mainContent.style.display = 'block';
+                showToast('به کوکب تک خوش آمدید');
+            }, 500);
+        }
+
+        function updateStatus(text) {
+            statusMsg.textContent = text;
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ۲. مدیریت ناوبری (SPA)
+        function navigateTo(pageId) {
+            // مخفی کردن همه صفحات
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // نمایش صفحه هدف
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                window.scrollTo(0, 0);
+            }
+
+            // بستن فریم بازی اگر باز بود
+            gameFrame.style.display = 'none';
+            gameFrame.src = '';
+
+            // آپدیت نوار پایین
+            updateBottomNav(pageId);
+        }
+
+        function updateBottomNav(pageId) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // منطق ساده برای فعال کردن آیکون‌ها
+            if (pageId === 'home-page') document.querySelectorAll('.nav-item')[0].classList.add('active');
+            if (pageId === 'tests-page') document.querySelectorAll('.nav-item')[1].classList.add('active');
+            if (pageId === 'games-page') document.querySelectorAll('.nav-item')[2].classList.add('active');
+            if (pageId === 'ai-page') document.querySelectorAll('.nav-item')[3].classList.add('active');
+        }
+
+        // ۳. مدیریت لینک‌ها و اجرا
+        function openExternal(url) {
+            // باز کردن در تب جدید برای تجربه کامل
+            window.open(url, '_blank');
+        }
+
+        function openGame(url) {
+            // تلاش برای باز کردن در آی‌فریم
+            gameFrame.src = url;
+            gameFrame.style.display = 'block';
+            
+            // اسکرول به پایین
+            setTimeout(() => {
+                gameFrame.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+
+            showToast('در حال بارگذاری بازی...');
+        }
+
+        // ۴. جستجوی شادبین
+        function searchShaadbin() {
+            const query = document.getElementById('shaadbin-input').value;
+            if (query.trim() === '') {
+                showToast('لطفا متنی برای جستجو وارد کنید');
+                return;
+            }
+            const url = `https://shaadbin.ir/search?q=${encodeURIComponent(query)}`;
+            window.open(url, '_blank');
+        }
+
+        // ۵. نمایش پیام (Toast)
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ۶. کنترل خطا و پایداری
+        window.addEventListener('error', (e) => {
+            console.error('خطای سیستم:', e);
+            showToast('یک خطای جزئی رخ داد اما سیستم پایدار است');
+        });
+
+        window.addEventListener('offline', () => {
+            showToast('اتصال اینترنت قطع شد');
+        });
+
+        window.addEventListener('online', () => {
+            showToast('اتصال اینترنت برقرار شد');
+        });
+
+    </script>
+</body>
+</html>
